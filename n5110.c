@@ -18,7 +18,6 @@
 
 
 
-
 static byte Screen[RESOLUTION_X][RESOLUTION_Y/8];	//áóôåð ýêðàíà
 
 #define CHECK_PX(x)				if(x > RESOLUTION_X) {Px = 0;}	//ïðîâåðêà íà ïðåâûøåíèå ãðàíèöû
