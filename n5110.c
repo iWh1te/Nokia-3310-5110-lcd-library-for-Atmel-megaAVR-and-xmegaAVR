@@ -1,17 +1,17 @@
 
 
 /*
-* Описание     :  Драйвер для графического LCD от Nokia 5110 для megaAVR и xmegaAVR
-* Автор        :  iWh1te <vcl.wh1te@gmail.com>
-* Веб-страница :  
+* ГЋГЇГЁГ±Г Г­ГЁГҐ     :  Г„Г°Г Г©ГўГҐГ° Г¤Г«Гї ГЈГ°Г ГґГЁГ·ГҐГ±ГЄГ®ГЈГ® LCD Г®ГІ Nokia 5110 Г¤Г«Гї megaAVR ГЁ xmegaAVR
+* ГЂГўГІГ®Г°        :  iWh1te <vcl.wh1te@gmail.com>
+* Г‚ГҐГЎ-Г±ГІГ°Г Г­ГЁГ¶Г  :  
 *
 */
 
 
 #include "n5110.h"
 
-//Сюда инклюдить шрифты
-//Так же добавить в таблицу шрифтов LcdFontSize
+//Г‘ГѕГ¤Г  ГЁГ­ГЄГ«ГѕГ¤ГЁГІГј ГёГ°ГЁГґГІГ»
+//Г’Г ГЄ Г¦ГҐ Г¤Г®ГЎГ ГўГЁГІГј Гў ГІГ ГЎГ«ГЁГ¶Гі ГёГ°ГЁГґГІГ®Гў LcdFontSize
 #include "Default_font.h"
 
 
@@ -19,13 +19,12 @@
 
 
 
+static byte Screen[RESOLUTION_X][RESOLUTION_Y/8];	//ГЎГіГґГҐГ° ГЅГЄГ°Г Г­Г 
 
-static byte Screen[RESOLUTION_X][RESOLUTION_Y/8];	//буфер экрана
-
-#define CHECK_PX(x)				if(x > RESOLUTION_X) {Px = 0;}	//проверка на превышение границы
+#define CHECK_PX(x)				if(x > RESOLUTION_X) {Px = 0;}	//ГЇГ°Г®ГўГҐГ°ГЄГ  Г­Г  ГЇГ°ГҐГўГ»ГёГҐГ­ГЁГҐ ГЈГ°Г Г­ГЁГ¶Г»
 
 /**
-		?\Функция не калиброванной задержки
+		?\Г”ГіГ­ГЄГ¶ГЁГї Г­ГҐ ГЄГ Г«ГЁГЎГ°Г®ГўГ Г­Г­Г®Г© Г§Г Г¤ГҐГ°Г¦ГЄГЁ
 */
 static void Delay(void);
 
@@ -37,7 +36,7 @@ static void Delay(void)
 
 
 /************************************************************************/
-/*                    Работа с SPI				                        */
+/*                    ГђГ ГЎГ®ГІГ  Г± SPI				                        */
 /************************************************************************/
 
 void SPI_Init(void)
@@ -49,11 +48,11 @@ void SPI_Init(void)
 		#ifdef XMEGA_AVR
 		#endif		
 	#else		
-		#ifdef MEGA_AVR		//Для megaAVR
-			SPCR = 0x50; // без прерываний, старший бит первый, режим мастера, CPOL->0, CPHA->0, Clk/4
+		#ifdef MEGA_AVR		//Г„Г«Гї megaAVR
+			SPCR = 0x50; // ГЎГҐГ§ ГЇГ°ГҐГ°Г»ГўГ Г­ГЁГ©, Г±ГІГ Г°ГёГЁГ© ГЎГЁГІ ГЇГҐГ°ГўГ»Г©, Г°ГҐГ¦ГЁГ¬ Г¬Г Г±ГІГҐГ°Г , CPOL->0, CPHA->0, Clk/4
 		#endif
 			
-		#ifdef XMEGA_AVR	//Для xmegaAVR
+		#ifdef XMEGA_AVR	//Г„Г«Гї xmegaAVR
 			LCD_SPI_MODULE.CTRL = SPI_MASTER_bm | SPI_PRESCALER_DIV4_gc | SPI_ENABLE_bm | SPI_MODE_0_gc;
 		#endif	
 	#endif
@@ -80,13 +79,13 @@ void SPI_WriteByte(byte *Byte)
 			LCD_PORT &= ~_BV(SPI_MOSI_PIN);
 		}
 	#else	
-		#ifdef MEGA_AVR		//Для megaAVR
+		#ifdef MEGA_AVR		//Г„Г«Гї megaAVR
 			SPDR = data;
-			// Ждем окончания передачи
+			// Г†Г¤ГҐГ¬ Г®ГЄГ®Г­Г·Г Г­ГЁГї ГЇГҐГ°ГҐГ¤Г Г·ГЁ
 			while ( (SPSR & 0x80) != 0x80 );
 		#endif
 	
-		#ifdef XMEGA_AVR	//Для xmegaAVR
+		#ifdef XMEGA_AVR	//Г„Г«Гї xmegaAVR
 			LCD_SPI_MODULE.DATA = *Byte;
 			while (!(LCD_SPI_MODULE.STATUS & SPI_IF_bm));
 		#endif
@@ -95,7 +94,7 @@ void SPI_WriteByte(byte *Byte)
 
 void GLCD_WriteByte(byte Byte, LcdCmdData CmdData)
 {
-	// Включаем контроллер дисплея (низкий уровень активный)
+	// Г‚ГЄГ«ГѕГ·Г ГҐГ¬ ГЄГ®Г­ГІГ°Г®Г«Г«ГҐГ° Г¤ГЁГ±ГЇГ«ГҐГї (Г­ГЁГ§ГЄГЁГ© ГіГ°Г®ГўГҐГ­Гј Г ГЄГІГЁГўГ­Г»Г©)
 	LCD_PORT &= ~( _BV( LCD_CE_PIN ) );
 
 	if ( CmdData == LCD_DATA )
@@ -107,9 +106,9 @@ void GLCD_WriteByte(byte Byte, LcdCmdData CmdData)
 		LCD_PORT &= ~( _BV( LCD_DC_PIN ) );
 	}
 
-	SPI_WriteByte(&Byte);	// Отправка данных в контроллер дисплея
+	SPI_WriteByte(&Byte);	// ГЋГІГЇГ°Г ГўГЄГ  Г¤Г Г­Г­Г»Гµ Гў ГЄГ®Г­ГІГ°Г®Г«Г«ГҐГ° Г¤ГЁГ±ГЇГ«ГҐГї
 	
-	// Отключаем контроллер дисплея
+	// ГЋГІГЄГ«ГѕГ·Г ГҐГ¬ ГЄГ®Г­ГІГ°Г®Г«Г«ГҐГ° Г¤ГЁГ±ГЇГ«ГҐГї
 	LCD_PORT |= _BV( LCD_CE_PIN );
 }
 
@@ -117,35 +116,35 @@ void GLCD_WriteByte(byte Byte, LcdCmdData CmdData)
 
 
 /************************************************************************/
-/*                    Работа с экраном и буфером                        */
+/*                    ГђГ ГЎГ®ГІГ  Г± ГЅГЄГ°Г Г­Г®Г¬ ГЁ ГЎГіГґГҐГ°Г®Г¬                        */
 /************************************************************************/
 void GLCD_Init(void)
 {
-	// Pull-up на вывод подключенный к reset дисплея
+	// Pull-up Г­Г  ГўГ»ГўГ®Г¤ ГЇГ®Г¤ГЄГ«ГѕГ·ГҐГ­Г­Г»Г© ГЄ reset Г¤ГЁГ±ГЇГ«ГҐГї
 	LCD_PORT |= _BV ( LCD_RST_PIN );
 
-	// Устанавливаем нужные биты порта на выход
+	// Г“Г±ГІГ Г­Г ГўГ«ГЁГўГ ГҐГ¬ Г­ГіГ¦Г­Г»ГҐ ГЎГЁГІГ» ГЇГ®Г°ГІГ  Г­Г  ГўГ»ГµГ®Г¤
 	LCD_DDR |= _BV( LCD_RST_PIN ) | _BV( LCD_DC_PIN ) | _BV( LCD_CE_PIN ) | _BV( SPI_MOSI_PIN ) | _BV( SPI_CLK_PIN );
 
 	Delay();
 
-	// Дергаем reset
+	// Г„ГҐГ°ГЈГ ГҐГ¬ reset
 	LCD_PORT &= ~( _BV( LCD_RST_PIN ) );
 	Delay();
 	LCD_PORT |= _BV ( LCD_RST_PIN );
 
-	SPI_Init();	// Активируем SPI:
+	SPI_Init();	// ГЂГЄГІГЁГўГЁГ°ГіГҐГ¬ SPI:
 
-	// Отключаем LCD контроллер - высокий уровень на SCE
+	// ГЋГІГЄГ«ГѕГ·Г ГҐГ¬ LCD ГЄГ®Г­ГІГ°Г®Г«Г«ГҐГ° - ГўГ»Г±Г®ГЄГЁГ© ГіГ°Г®ГўГҐГ­Гј Г­Г  SCE
 	LCD_PORT |= _BV( LCD_CE_PIN );
 
-	// Отправляем команды дисплею
-	GLCD_WriteByte(0x21, LCD_CMD);	// Включаем расширенный набор команд (LCD Extended Commands)
-	GLCD_WriteByte(0xC8, LCD_CMD);	// Установка контрастности (LCD Vop)
-	GLCD_WriteByte(0x06, LCD_CMD);	// Установка температурного коэффициента (Temp coefficent)
-	GLCD_WriteByte(0x13, LCD_CMD);	// Настройка питания (LCD bias mode 1:48)
-	GLCD_WriteByte(0x20, LCD_CMD);	// Включаем стандартный набор команд и горизонтальную адресацию (LCD Standard Commands,Horizontal addressing mode)
-	GLCD_WriteByte(0x0C, LCD_CMD);	// Нормальный режим (LCD in normal mode)
+	// ГЋГІГЇГ°Г ГўГ«ГїГҐГ¬ ГЄГ®Г¬Г Г­Г¤Г» Г¤ГЁГ±ГЇГ«ГҐГѕ
+	GLCD_WriteByte(0x21, LCD_CMD);	// Г‚ГЄГ«ГѕГ·Г ГҐГ¬ Г°Г Г±ГёГЁГ°ГҐГ­Г­Г»Г© Г­Г ГЎГ®Г° ГЄГ®Г¬Г Г­Г¤ (LCD Extended Commands)
+	GLCD_WriteByte(0xC8, LCD_CMD);	// Г“Г±ГІГ Г­Г®ГўГЄГ  ГЄГ®Г­ГІГ°Г Г±ГІГ­Г®Г±ГІГЁ (LCD Vop)
+	GLCD_WriteByte(0x06, LCD_CMD);	// Г“Г±ГІГ Г­Г®ГўГЄГ  ГІГҐГ¬ГЇГҐГ°Г ГІГіГ°Г­Г®ГЈГ® ГЄГ®ГЅГґГґГЁГ¶ГЁГҐГ­ГІГ  (Temp coefficent)
+	GLCD_WriteByte(0x13, LCD_CMD);	// ГЌГ Г±ГІГ°Г®Г©ГЄГ  ГЇГЁГІГ Г­ГЁГї (LCD bias mode 1:48)
+	GLCD_WriteByte(0x20, LCD_CMD);	// Г‚ГЄГ«ГѕГ·Г ГҐГ¬ Г±ГІГ Г­Г¤Г Г°ГІГ­Г»Г© Г­Г ГЎГ®Г° ГЄГ®Г¬Г Г­Г¤ ГЁ ГЈГ®Г°ГЁГ§Г®Г­ГІГ Г«ГјГ­ГіГѕ Г Г¤Г°ГҐГ±Г Г¶ГЁГѕ (LCD Standard Commands,Horizontal addressing mode)
+	GLCD_WriteByte(0x0C, LCD_CMD);	// ГЌГ®Г°Г¬Г Г«ГјГ­Г»Г© Г°ГҐГ¦ГЁГ¬ (LCD in normal mode)
 	
 	GLCD_CLearBuffer();
 	GLCD_Update();
@@ -153,9 +152,9 @@ void GLCD_Init(void)
 
 void GLCD_SetContrast(byte Value)
 {
-	GLCD_WriteByte( 0x21, LCD_CMD );              // Расширенный набор команд
-	GLCD_WriteByte( 0x80 | Value, LCD_CMD );	  // Установка уровня контрастности
-	GLCD_WriteByte( 0x20, LCD_CMD );              // Стандартный набор команд, горизонтальная адресация
+	GLCD_WriteByte( 0x21, LCD_CMD );              // ГђГ Г±ГёГЁГ°ГҐГ­Г­Г»Г© Г­Г ГЎГ®Г° ГЄГ®Г¬Г Г­Г¤
+	GLCD_WriteByte( 0x80 | Value, LCD_CMD );	  // Г“Г±ГІГ Г­Г®ГўГЄГ  ГіГ°Г®ГўГ­Гї ГЄГ®Г­ГІГ°Г Г±ГІГ­Г®Г±ГІГЁ
+	GLCD_WriteByte( 0x20, LCD_CMD );              // Г‘ГІГ Г­Г¤Г Г°ГІГ­Г»Г© Г­Г ГЎГ®Г° ГЄГ®Г¬Г Г­Г¤, ГЈГ®Г°ГЁГ§Г®Г­ГІГ Г«ГјГ­Г Гї Г Г¤Г°ГҐГ±Г Г¶ГЁГї
 }
 
 void GLCD_CLearBuffer(void)
@@ -171,10 +170,10 @@ void GLCD_CLearBuffer(void)
 
 void GLCD_Update(void)
 {
-	#ifdef CHINA_LCD		//Если используется китайский экрак
+	#ifdef CHINA_LCD		//Г…Г±Г«ГЁ ГЁГ±ГЇГ®Г«ГјГ§ГіГҐГІГ±Гї ГЄГЁГІГ Г©Г±ГЄГЁГ© ГЅГЄГ°Г ГЄ
 		for (byte y = 0; y < RESOLUTION_Y / 8; y++)
 		{
-			GLCD_WriteByte(0x80, LCD_CMD); //установка координат по оси X
+			GLCD_WriteByte(0x80, LCD_CMD); //ГіГ±ГІГ Г­Г®ГўГЄГ  ГЄГ®Г®Г°Г¤ГЁГ­Г ГІ ГЇГ® Г®Г±ГЁ X
 			GLCD_WriteByte(0x40 | y, LCD_CMD); 
 			for (byte x = 0; x < RESOLUTION_X; x++)
 			{
@@ -184,10 +183,10 @@ void GLCD_Update(void)
 		GLCD_WriteByte(0x21, LCD_CMD);
 		GLCD_WriteByte(0x45, LCD_CMD);
 		GLCD_WriteByte(0x20, LCD_CMD);
-	#else			//Если используется оригинальный
+	#else			//Г…Г±Г«ГЁ ГЁГ±ГЇГ®Г«ГјГ§ГіГҐГІГ±Гї Г®Г°ГЁГЈГЁГ­Г Г«ГјГ­Г»Г©
 		for (byte y = 0; y < RESOLUTION_Y / 8; y++)
 		{
-			GLCD_WriteByte(0x80, LCD_CMD); //установка координат по оси X
+			GLCD_WriteByte(0x80, LCD_CMD); //ГіГ±ГІГ Г­Г®ГўГЄГ  ГЄГ®Г®Г°Г¤ГЁГ­Г ГІ ГЇГ® Г®Г±ГЁ X
 			GLCD_WriteByte(0x40 | y, LCD_CMD);
 			for (byte x = 0; x < RESOLUTION_X; x++)
 			{
@@ -201,11 +200,11 @@ void GLCD_Update(void)
 
 void GLCD_UpdateAlign(byte Xi, byte Xj, byte Yi, byte Yj)
 {
-	#ifdef CHINA_LCD		//Если используется китайский экрак
+	#ifdef CHINA_LCD		//Г…Г±Г«ГЁ ГЁГ±ГЇГ®Г«ГјГ§ГіГҐГІГ±Гї ГЄГЁГІГ Г©Г±ГЄГЁГ© ГЅГЄГ°Г ГЄ
 	
 		for (byte y = Yi; y <= Yj; y++)
 		{
-			GLCD_WriteByte(0x80 | Xi, LCD_CMD); //установка координат по оси X
+			GLCD_WriteByte(0x80 | Xi, LCD_CMD); //ГіГ±ГІГ Г­Г®ГўГЄГ  ГЄГ®Г®Г°Г¤ГЁГ­Г ГІ ГЇГ® Г®Г±ГЁ X
 			GLCD_WriteByte(0x40 | y/8, LCD_CMD);
 			for (byte x = Xi; x <= Xj; x++)
 			{
@@ -216,11 +215,11 @@ void GLCD_UpdateAlign(byte Xi, byte Xj, byte Yi, byte Yj)
 		GLCD_WriteByte(0x45, LCD_CMD);
 		GLCD_WriteByte(0x20, LCD_CMD);
 	
-	#else			//Если используется оригинальный
+	#else			//Г…Г±Г«ГЁ ГЁГ±ГЇГ®Г«ГјГ§ГіГҐГІГ±Гї Г®Г°ГЁГЈГЁГ­Г Г«ГјГ­Г»Г©
 	
 		for (byte y = Yi; y <= Yj; y++)
 		{
-			GLCD_WriteByte(0x80 | Xi, LCD_CMD); //установка координат по оси X
+			GLCD_WriteByte(0x80 | Xi, LCD_CMD); //ГіГ±ГІГ Г­Г®ГўГЄГ  ГЄГ®Г®Г°Г¤ГЁГ­Г ГІ ГЇГ® Г®Г±ГЁ X
 			GLCD_WriteByte(0x40 | y/8, LCD_CMD);
 			for (byte x = Xi; x <= Xj; x++)
 			{
@@ -269,7 +268,7 @@ void GLCD_FillAlign(byte Xi, byte Xj, byte Yi, byte Yj, LcdPixelMode pixelMode)
 
 
 /************************************************************************/
-/*                    Работа со строками.                               */
+/*                    ГђГ ГЎГ®ГІГ  Г±Г® Г±ГІГ°Г®ГЄГ Г¬ГЁ.                               */
 /************************************************************************/
 void GLCD_DrawChar(char charachter, LcdFontSize fontSize, bool inversion)
 {	
@@ -281,7 +280,7 @@ void GLCD_DrawChar(char charachter, LcdFontSize fontSize, bool inversion)
 		{
 			if (inversion)
 			{
-				GLCD_FillAlign(Px-1, Px+FONT_1X_X+1, Py-1, Py+FONT_1X_Y+1, PIXEL_ON);	//заливаем полигон для фона
+				GLCD_FillAlign(Px-1, Px+FONT_1X_X+1, Py-1, Py+FONT_1X_Y+1, PIXEL_ON);	//Г§Г Г«ГЁГўГ ГҐГ¬ ГЇГ®Г«ГЁГЈГ®Г­ Г¤Г«Гї ГґГ®Г­Г 
 				for (byte x = 0; x < FONT_1X_X; x++)
 				{
 					if (Py%8 == 0)
@@ -289,7 +288,7 @@ void GLCD_DrawChar(char charachter, LcdFontSize fontSize, bool inversion)
 						Screen[Px+x][(Py/8)] ^= pgm_read_byte(font5x7 + (FONT_1X_X * charachter) + x);
 						CHECK_PX(Px+x);
 					}
-					else														//отрисовка символа
+					else														//Г®ГІГ°ГЁГ±Г®ГўГЄГ  Г±ГЁГ¬ГўГ®Г«Г 
 					{
 						Screen[Px+x][(Py/8)] ^= pgm_read_byte(font5x7 + (FONT_1X_X * charachter) + x)  << (Py%8);  //
 						Screen[Px+x][(Py/8+1)] ^= pgm_read_byte(font5x7 + (FONT_1X_X * charachter) + x)  >> (8-(Py%8));
@@ -313,7 +312,7 @@ void GLCD_DrawChar(char charachter, LcdFontSize fontSize, bool inversion)
 					CHECK_PX(Px+x);
 				}
 			}
-			Px += FONT_1X_X+1; //следующая позиция
+			Px += FONT_1X_X+1; //Г±Г«ГҐГ¤ГіГѕГ№Г Гї ГЇГ®Г§ГЁГ¶ГЁГї
 			break;
 		}//end case FONT_1x
 		case FONT_2X:
@@ -364,7 +363,7 @@ char GLCD_SearchChar(char charachter, LcdFontSize fontSize)
 
 
 /************************************************************************/
-/*                    Работа c графикой.                               */
+/*                    ГђГ ГЎГ®ГІГ  c ГЈГ°Г ГґГЁГЄГ®Г©.                               */
 /************************************************************************/
 
 void GLCD_DrawLine(byte Xi, byte Yi, byte Xj, byte Yj, LcdPixelMode pixelMode)
@@ -397,10 +396,10 @@ void GLCD_DrawLine(byte Xi, byte Yi, byte Xj, byte Yj, LcdPixelMode pixelMode)
 
 void GLCD_DrawRectangle(byte baseX, byte baseY, byte Height, byte Width, LcdPixelMode pixelMode)
 {	
-	//рисуем горизонтальные линии
+	//Г°ГЁГ±ГіГҐГ¬ ГЈГ®Г°ГЁГ§Г®Г­ГІГ Г«ГјГ­Г»ГҐ Г«ГЁГ­ГЁГЁ
 	GLCD_DrawLine(baseX, baseY, baseX + Width, baseY, pixelMode);
 	GLCD_DrawLine(baseX, baseY + Height, baseX + Width, baseY + Height, pixelMode);
-	//рисуем вертикальные линии
+	//Г°ГЁГ±ГіГҐГ¬ ГўГҐГ°ГІГЁГЄГ Г«ГјГ­Г»ГҐ Г«ГЁГ­ГЁГЁ
 	GLCD_DrawLine(baseX, baseY, baseX, baseY + Height, pixelMode);
 	GLCD_DrawLine(baseX + Width, baseY, baseX + Width, baseY + Height, pixelMode);
 }
@@ -427,7 +426,7 @@ void GLCD_DrawCircle(byte X, byte Y, byte radius, LcdPixelMode pixelMode)
 		else p += ((xc++ - yc--)<<2) + 10;
 	}
 
-	// Установка флага изменений кэша
+	// Г“Г±ГІГ Г­Г®ГўГЄГ  ГґГ«Г ГЈГ  ГЁГ§Г¬ГҐГ­ГҐГ­ГЁГ© ГЄГЅГёГ 
 }
 
 //////////////////////////////////////////////////////////////////////////
