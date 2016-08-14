@@ -426,8 +426,6 @@ void GLCD_DrawCircle(byte X, byte Y, byte radius, LcdPixelMode pixelMode)
 		if (p < 0) p += (xc++ << 2) + 6;
 		else p += ((xc++ - yc--)<<2) + 10;
 	}
-
-	// Установка флага изменений кэша
 }
 
 //////////////////////////////////////////////////////////////////////////
